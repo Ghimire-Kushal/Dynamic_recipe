@@ -19,9 +19,9 @@
         const applyTheme = function (theme) {
           if (!body) return;
           body.setAttribute('data-theme', theme);
-          const prefersDark = theme === 'dark';
+          const prefersDark = theme === 'light';
 
-          body.classList.toggle('bg-dark', prefersDark);
+          body.classList.toggle('bg-light', prefersDark);
           body.classList.toggle('bg-light', !prefersDark);
 
           if (toggle) {

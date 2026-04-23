@@ -1,3 +1,4 @@
+
 <?php
 // admin/comments.php — Manage & edit comments (compact, CSRF-protected)
 

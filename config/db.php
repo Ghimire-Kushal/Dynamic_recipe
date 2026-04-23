@@ -1,22 +1,38 @@
 <?php
+declare(strict_types=1);
+
+/*
+|--------------------------------------------------------------------------
+| Start Session (safe)
+|--------------------------------------------------------------------------
+*/
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 /*
 |--------------------------------------------------------------------------
-| Database Configuration (XAMPP - Localhost)
+| Error Reporting (development only)
 |--------------------------------------------------------------------------
 */
-$DB_HOST = 'localhost';   // ✅ use localhost for XAMPP
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
+
+/*
+|--------------------------------------------------------------------------
+| Database Configuration (XAMPP Localhost)
+|--------------------------------------------------------------------------
+*/
+$DB_HOST = 'localhost';
 $DB_PORT = '3306';
-$DB_NAME = 'recipe_app';
+$DB_NAME = 'dynamic_recipe';
 $DB_USER = 'root';
-$DB_PASS = '';            // default XAMPP password is empty
+$DB_PASS = ''; 
 
 try {
     $pdo = new PDO(
-        "mysql:host=$DB_HOST;port=$DB_PORT;dbname=$DB_NAME;charset=utf8mb4",
+        "mysql:host={$DB_HOST};port={$DB_PORT};dbname={$DB_NAME};charset=utf8mb4",
         $DB_USER,
         $DB_PASS,
         [
@@ -26,16 +42,18 @@ try {
         ]
     );
 } catch (PDOException $e) {
-    die("Database connection failed: " . $e->getMessage());
+    exit('❌ Database connection failed.');
 }
 
 /*
 |--------------------------------------------------------------------------
-| Base URL (LOCAL ONLY)
+| Base URL (AUTO detect for localhost)
 |--------------------------------------------------------------------------
 */
 if (!defined('BASE_PATH')) {
-    define('BASE_PATH', 'http://localhost/dynamic_recipe');
+    $projectFolder = 'dynamic_recipe'; // 🔥 CHANGE if your folder name differs
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    define('BASE_PATH', $protocol . '://' . $_SERVER['HTTP_HOST'] . '/' . $projectFolder);
 }
 
 /*
@@ -43,18 +61,19 @@ if (!defined('BASE_PATH')) {
 | Helper Functions
 |--------------------------------------------------------------------------
 */
-function url($path = '') {
+
+function url(string $path = ''): string {
     return rtrim(BASE_PATH, '/') . '/' . ltrim($path, '/');
 }
 
-function is_logged_in() {
-    return isset($_SESSION['user']);
+function is_logged_in(): bool {
+    return !empty($_SESSION['user']);
 }
 
-function is_admin() {
-    return isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'admin';
+function is_admin(): bool {
+    return isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'admin';
 }
 
-function e($s) {
-    return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8');
+function e(?string $str): string {
+    return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
 }

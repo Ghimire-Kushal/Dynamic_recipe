@@ -1,23 +1,35 @@
-/* Global card styling to match home page */
+/* ================================
+   Global Card Styling
+================================ */
 .card {
   border-radius: 1.25rem;
+  overflow: hidden; /* Ensures rounded corners apply to images */
 }
 
-/* Ensure all recipe card images are same size */
+
+/* ================================
+   Recipe Card Images
+   - Keeps all images uniform
+================================ */
 .card-img-top {
-  display: block;
   width: 100%;
   height: 220px;
   object-fit: cover;
+  display: block;
 }
-/* Placeholder when there is no image */
+
+
+/* ================================
+   Image Placeholder (No Image)
+================================ */
 .card-img-placeholder {
-  height: 220px;
   width: 100%;
-  background-color: #e5e7eb;   /* light grey */
+  height: 220px;
+  background-color: #e5e7eb; /* Light gray */
   display: flex;
   align-items: center;
   justify-content: center;
   color: #6b7280;
   font-size: 0.9rem;
+  font-weight: 500;
 }
