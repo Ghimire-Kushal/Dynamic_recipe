@@ -1,0 +1,12 @@
+/* A) Wider layout on large screens */
+@media (min-width: 1200px) {
+  main.container {
+    max-width: 1320px;        /* more width than default 1140 */
+  }
+}
+
+@media (min-width: 1400px) {
+  main.container {
+    max-width: 1440px;        /* even wider on very big screens */
+  }
+}
