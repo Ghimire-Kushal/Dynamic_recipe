@@ -1,4 +1,3 @@
-
 <?php
 // admin/comments.php — Manage & edit comments (compact, CSRF-protected)
 
@@ -8,7 +7,7 @@ require_once __DIR__ . '/../config/db.php';
 // --- Admin-only gate
 if (empty($_SESSION['user']) || (($_SESSION['user']['role'] ?? '') !== 'admin')) {
   $_SESSION['flash']['danger'] = 'Admin access required.';
-  header('Location: ' . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/index.php');
+  header('Location: ' . url('index.php'));
   exit;
 }
 
@@ -17,7 +16,7 @@ if (empty($_SESSION['csrf_token'])) {
   $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 function csrf_field() {
-  echo '<input type="hidden" name="csrf_token" value="'.htmlspecialchars($_SESSION['csrf_token']).'">';
+  echo '<input type="hidden" name="csrf_token" value="'.e($_SESSION['csrf_token']).'">';
 }
 function check_csrf() {
   if (($_POST['csrf_token'] ?? '') !== ($_SESSION['csrf_token'] ?? '')) {
@@ -33,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
   $stmt = $pdo->prepare("DELETE FROM comments WHERE id=?");
   $stmt->execute([$id]);
   $_SESSION['flash']['success'] = 'Comment deleted.';
-  header('Location: ' . $_SERVER['PHP_SELF']);
+  header('Location: ' . url('admin/comments.php'));
   exit;
 }
 
@@ -47,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_id'])) {
     $stmt->execute([$text, $id]);
     $_SESSION['flash']['success'] = 'Comment updated.';
   }
-  header('Location: ' . $_SERVER['PHP_SELF']);
+  header('Location: ' . url('admin/comments.php'));
   exit;
 }
 
@@ -79,14 +78,14 @@ include __DIR__ . '/../includes/header.php';
       <form class="d-flex" method="get">
         <input class="form-control form-control-sm me-2"
                name="q" placeholder="Filter by recipe..."
-               value="<?= htmlspecialchars($q) ?>" style="max-width:220px;">
+               value="<?= e($q) ?>" style="max-width:220px;">
         <button class="btn btn-sm btn-outline-secondary">Search</button>
       </form>
     </div>
 
     <?php if (!empty($_SESSION['flash']['success'])): ?>
       <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <?= htmlspecialchars($_SESSION['flash']['success']) ?>
+        <?= e($_SESSION['flash']['success']) ?>
         <?php unset($_SESSION['flash']['success']); ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       </div>
@@ -110,12 +109,12 @@ include __DIR__ . '/../includes/header.php';
           <?php else: $i=1; foreach ($comments as $c): ?>
             <tr>
               <td><?= $i++ ?></td>
-              <td><?= htmlspecialchars($c['recipe']) ?></td>
-              <td><?= htmlspecialchars($c['author'] ?? 'Guest') ?></td>
-              <td class="text-truncate" style="max-width:300px;" title="<?= htmlspecialchars($c['comment']) ?>">
-                <?= htmlspecialchars($c['comment']) ?>
+              <td><?= e($c['recipe'] ?? 'Deleted recipe') ?></td>
+              <td><?= e($c['author'] ?? 'Guest') ?></td>
+              <td class="text-truncate" style="max-width:300px;" title="<?= e($c['comment']) ?>">
+                <?= e($c['comment']) ?>
               </td>
-              <td><small class="text-muted"><?= htmlspecialchars($c['created_at']) ?></small></td>
+              <td><small class="text-muted"><?= e($c['created_at']) ?></small></td>
               <td>
                 <!-- Edit (modal) -->
                 <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editModal<?= (int)$c['id'] ?>">Edit</button>
@@ -141,7 +140,7 @@ include __DIR__ . '/../includes/header.php';
                     <div class="modal-body">
                       <?php csrf_field(); ?>
                       <input type="hidden" name="edit_id" value="<?= (int)$c['id'] ?>">
-                      <textarea name="comment_text" class="form-control" rows="3"><?= htmlspecialchars($c['comment']) ?></textarea>
+                      <textarea name="comment_text" class="form-control" rows="3"><?= e($c['comment']) ?></textarea>
                     </div>
                     <div class="modal-footer">
                       <button type="submit" class="btn btn-primary btn-sm">Save</button>

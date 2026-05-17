@@ -1,115 +1,134 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
+// ── ALL logic + redirects BEFORE any output ──────────────────────────────
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require __DIR__ . '/../config/db.php';
-include __DIR__ . '/../includes/header.php';
 
-$errors = [];
+$errors   = [];
+$username = '';
+$email    = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
-    $email    = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $email    = trim($_POST['email']    ?? '');
+    $password = $_POST['password']         ?? '';
     $confirm  = $_POST['confirm_password'] ?? '';
 
-    // Validation
-    if (strlen($username) < 3) {
-        $errors[] = 'Username must be at least 3 characters.';
-    }
-
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'Valid email is required.';
-    }
-
-    if (strlen($password) < 6) {
-        $errors[] = 'Password must be at least 6 characters.';
-    }
-
-    if ($password !== $confirm) {
-        $errors[] = 'Passwords do not match.';
-    }
+    if (strlen($username) < 3)                      $errors[] = 'Username must be at least 3 characters.';
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'A valid email address is required.';
+    if (strlen($password) < 6)                      $errors[] = 'Password must be at least 6 characters.';
+    if ($password !== $confirm)                     $errors[] = 'Passwords do not match.';
 
     if (!$errors) {
         try {
-            // Check duplicate
-            $check = $pdo->prepare(
-                "SELECT id FROM users WHERE username = ? OR email = ?"
-            );
+            $check = $pdo->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
             $check->execute([$username, $email]);
-
             if ($check->fetch()) {
-                $errors[] = 'Username or email already exists.';
+                $errors[] = 'That username or email is already taken.';
             } else {
                 $hash = password_hash($password, PASSWORD_DEFAULT);
+                $pdo->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'user')")
+                    ->execute([$username, $email, $hash]);
 
-                $insert = $pdo->prepare(
-                    "INSERT INTO users (username, email, password, role)
-                     VALUES (?, ?, ?, 'user')"
-                );
-                $insert->execute([$username, $email, $hash]);
-
-                $_SESSION['flash']['success'] =
-                    'Account created successfully. Please log in.';
+                $_SESSION['flash']['success'] = 'Account created! Please log in.';
                 header('Location: login.php');
                 exit;
             }
-        } catch (PDOException $e) {
+        } catch (PDOException $ex) {
             $errors[] = 'Registration failed. Please try again.';
         }
     }
 }
+// ── HTML output starts here ───────────────────────────────────────────────
+include __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="row justify-content-center">
-  <div class="col-md-6 col-lg-5">
-    <div class="card shadow-sm">
-      <div class="card-body p-4">
-        <h1 class="h3 mb-3">Create your account</h1>
+<div style="min-height:calc(100vh - var(--navbar-h) - 56px);display:flex;align-items:center;justify-content:center;padding:48px 16px;">
+  <div class="auth-card-modern">
 
-        <?php if ($errors): ?>
-          <div class="alert alert-danger">
-            <ul class="mb-0">
-              <?php foreach ($errors as $err): ?>
-                <li><?= htmlspecialchars($err) ?></li>
-              <?php endforeach; ?>
-            </ul>
-          </div>
-        <?php endif; ?>
-
-        <form method="post">
-          <div class="mb-3">
-            <label class="form-label">Username</label>
-            <input type="text" name="username" class="form-control"
-                   value="<?= htmlspecialchars($_POST['username'] ?? '') ?>" required>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input type="email" name="email" class="form-control"
-                   value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Password</label>
-            <input type="password" name="password" class="form-control" required>
-          </div>
-
-          <div class="mb-4">
-            <label class="form-label">Confirm Password</label>
-            <input type="password" name="confirm_password" class="form-control" required>
-          </div>
-
-          <button class="btn btn-primary w-100">Create Account</button>
-
-          <p class="mt-3 text-center">
-            Already have an account? <a href="login.php">Log in</a>
-          </p>
-        </form>
-      </div>
+    <!-- Logo -->
+    <div class="auth-logo">
+      <div class="brand-icon">🍳</div>
+      <h1>Create account</h1>
+      <p>Join the RecipeApp community</p>
     </div>
+
+    <!-- Errors -->
+    <?php if ($errors): ?>
+    <div class="flash-alert danger" style="margin-bottom:20px;">
+      <i class="fa-solid fa-circle-xmark"></i>
+      <ul style="margin:0;padding-left:16px;">
+        <?php foreach ($errors as $err): ?>
+          <li><?= e($err) ?></li>
+        <?php endforeach; ?>
+      </ul>
+    </div>
+    <?php endif; ?>
+
+    <!-- Form -->
+    <form method="post" style="display:flex;flex-direction:column;gap:16px;">
+
+      <div class="form-field">
+        <label class="form-label-custom">Username</label>
+        <input class="form-input-custom" type="text" name="username"
+               value="<?= e($username) ?>" placeholder="coolchef123" required autocomplete="username">
+      </div>
+
+      <div class="form-field">
+        <label class="form-label-custom">Email</label>
+        <input class="form-input-custom" type="email" name="email"
+               value="<?= e($email) ?>" placeholder="you@example.com" required autocomplete="email">
+      </div>
+
+      <div class="form-field">
+        <label class="form-label-custom">Password</label>
+        <div style="position:relative;">
+          <input class="form-input-custom" type="password" id="pwd" name="password"
+                 placeholder="At least 6 characters" required autocomplete="new-password" style="padding-right:44px;">
+          <button type="button" onclick="togglePwd('pwd','eyePwd')"
+                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-light);cursor:pointer;font-size:.9rem;">
+            <i class="fa-regular fa-eye" id="eyePwd"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-field" style="margin-bottom:4px;">
+        <label class="form-label-custom">Confirm Password</label>
+        <div style="position:relative;">
+          <input class="form-input-custom" type="password" id="pwd2" name="confirm_password"
+                 placeholder="Repeat password" required autocomplete="new-password" style="padding-right:44px;">
+          <button type="button" onclick="togglePwd('pwd2','eyePwd2')"
+                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-light);cursor:pointer;font-size:.9rem;">
+            <i class="fa-regular fa-eye" id="eyePwd2"></i>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary-custom" style="width:100%;justify-content:center;padding:13px;">
+        <i class="fa-solid fa-user-plus"></i> Create Account
+      </button>
+
+    </form>
+
+    <p style="text-align:center;margin-top:20px;font-size:.88rem;color:var(--text-muted);">
+      Already have an account?
+      <a href="<?= url('auth/login.php') ?>" style="color:var(--clr-600);font-weight:700;">Log in</a>
+    </p>
+
   </div>
 </div>
+
+<script>
+function togglePwd(inputId, iconId) {
+  var input = document.getElementById(inputId);
+  var icon  = document.getElementById(iconId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.classList.replace('fa-eye', 'fa-eye-slash');
+  } else {
+    input.type = 'password';
+    icon.classList.replace('fa-eye-slash', 'fa-eye');
+  }
+}
+</script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

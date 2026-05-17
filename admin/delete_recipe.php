@@ -4,7 +4,6 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once __DIR__ . '/../config/db.php';
-require_once __DIR__ . '/../includes/functions.php'; // if url() function is here
 
 /* =========================
    1. Admin Access Check

@@ -51,9 +51,13 @@ try {
 |--------------------------------------------------------------------------
 */
 if (!defined('BASE_PATH')) {
-    $projectFolder = 'dynamic_recipe'; // 🔥 CHANGE if your folder name differs
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    define('BASE_PATH', $protocol . '://' . $_SERVER['HTTP_HOST'] . '/' . $projectFolder);
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+    $pathParts = array_values(array_filter(explode('/', $scriptName)));
+    $projectFolder = $pathParts[0] ?? basename(dirname(__DIR__));
+
+    define('BASE_PATH', $protocol . '://' . $host . '/' . $projectFolder);
 }
 
 /*

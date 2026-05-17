@@ -1,10 +1,9 @@
-
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/../config/db.php';
 if (empty($_SESSION['user']) || ($_SESSION['user']['role'] ?? '') !== 'admin') {
     $_SESSION['flash']['danger'] = 'Admin access required.';
-    header('Location: ' . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/index.php'); exit;
+    header('Location: ' . url('index.php')); exit;
 }
 if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
 function csrf_field(){ echo '<input type="hidden" name="csrf_token" value="'.htmlspecialchars($_SESSION['csrf_token']).'">'; }

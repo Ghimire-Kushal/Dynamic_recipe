@@ -1,13 +1,12 @@
-
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/../config/db.php';
 if (empty($_SESSION['user']) || ($_SESSION['user']['role'] ?? '') !== 'admin') {
     $_SESSION['flash']['danger'] = 'Admin access required.';
-    header('Location: ' . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/index.php'); exit;
+    header('Location: ' . url('index.php')); exit;
 }
 if (empty($_SESSION['csrf_token'])) { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); }
-function csrf_field(){ echo '<input type="hidden" name="csrf_token" value="'.htmlspecialchars($_SESSION['csrf_token']).'">'; }
+function csrf_field(){ echo '<input type="hidden" name="csrf_token" value="'.e($_SESSION['csrf_token']).'">'; }
 function check_csrf(){ if(($_POST['csrf_token'] ?? '') !== ($_SESSION['csrf_token'] ?? '')){ http_response_code(403); exit('Invalid CSRF token'); } }
 
 $id = (int)($_GET['id'] ?? 0);
@@ -55,24 +54,24 @@ include __DIR__ . '/../includes/header.php';
 ?>
 <div class="container py-4">
   <h1 class="h3 mb-3">Edit Recipe</h1>
-  <?php if($err): ?><div class="alert alert-danger"><ul class="mb-0"><?php foreach($err as $e) echo '<li>'.htmlspecialchars($e).'</li>'; ?></ul></div><?php endif; ?>
+  <?php if($err): ?><div class="alert alert-danger"><ul class="mb-0"><?php foreach($err as $error) echo '<li>'.e($error).'</li>'; ?></ul></div><?php endif; ?>
   <form method="post" enctype="multipart/form-data" class="card p-4 shadow-sm" style="max-width:900px;">
     <?php csrf_field(); ?>
     <div class="mb-3">
       <label class="form-label">Title</label>
-      <input class="form-control" name="title" value="<?= htmlspecialchars($_POST['title'] ?? $r['title']) ?>">
+      <input class="form-control" name="title" value="<?= e($_POST['title'] ?? $r['title']) ?>">
     </div>
     <div class="mb-3">
       <label class="form-label">Category</label>
-      <input class="form-control" name="category" value="<?= htmlspecialchars($_POST['category'] ?? $r['category']) ?>">
+      <input class="form-control" name="category" value="<?= e($_POST['category'] ?? $r['category']) ?>">
     </div>
     <div class="mb-3">
       <label class="form-label">Ingredients</label>
-      <textarea class="form-control" rows="5" name="ingredients"><?= htmlspecialchars($_POST['ingredients'] ?? $r['ingredients']) ?></textarea>
+      <textarea class="form-control" rows="5" name="ingredients"><?= e($_POST['ingredients'] ?? $r['ingredients']) ?></textarea>
     </div>
     <div class="mb-3">
       <label class="form-label">Steps</label>
-      <textarea class="form-control" rows="6" name="steps"><?= htmlspecialchars($_POST['steps'] ?? $r['steps']) ?></textarea>
+      <textarea class="form-control" rows="6" name="steps"><?= e($_POST['steps'] ?? $r['steps']) ?></textarea>
     </div>
     <div class="mb-3">
       <label class="form-label">Image</label>

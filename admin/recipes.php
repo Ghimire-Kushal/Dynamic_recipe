@@ -6,8 +6,12 @@ require_once __DIR__ . '/../config/db.php';
 // Admin gate
 if (empty($_SESSION['user']) || (($_SESSION['user']['role'] ?? '') !== 'admin')) {
   $_SESSION['flash']['danger'] = 'Admin access required.';
-  header('Location: ' . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/index.php');
+  header('Location: ' . url('index.php'));
   exit;
+}
+
+if (empty($_SESSION['csrf_token'])) {
+  $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
 // Search
@@ -32,7 +36,7 @@ include __DIR__ . '/../includes/header.php';
     <div class="d-flex align-items-center justify-content-between mb-3">
       <h1 class="h4 mb-0">Manage Recipes</h1>
       <form class="d-flex" method="get">
-        <input class="form-control form-control-sm me-2" name="q" placeholder="Search..." value="<?= htmlspecialchars($q) ?>" style="max-width:220px;">
+        <input class="form-control form-control-sm me-2" name="q" placeholder="Search..." value="<?= e($q) ?>" style="max-width:220px;">
         <button class="btn btn-sm btn-outline-secondary">Search</button>
       </form>
     </div>
@@ -55,13 +59,14 @@ include __DIR__ . '/../includes/header.php';
           <?php else: $i = 1; foreach($recipes as $r): ?>
           <tr>
             <td><?= $i++ ?></td>
-            <td><a href="<?= url('recipe.php?id='.$r['id']) ?>" target="_blank"><?= htmlspecialchars($r['title']) ?></a></td>
-            <td><?= htmlspecialchars($r['category']) ?></td>
-            <td><?= htmlspecialchars($r['author'] ?? '—') ?></td>
-            <td><small class="text-muted"><?= htmlspecialchars($r['created_at']) ?></small></td>
+            <td><a href="<?= url('recipe.php?id='.$r['id']) ?>" target="_blank"><?= e($r['title']) ?></a></td>
+            <td><?= e($r['category']) ?></td>
+            <td><?= e($r['author'] ?? '—') ?></td>
+            <td><small class="text-muted"><?= e($r['created_at']) ?></small></td>
             <td>
               <a class="btn btn-sm btn-primary" href="<?= url('admin/edit_recipe.php?id='.$r['id']) ?>">Edit</a>
               <form class="d-inline" method="post" action="<?= url('admin/delete_recipe.php') ?>" onsubmit="return confirm('Delete this recipe?');">
+                <input type="hidden" name="csrf_token" value="<?= e($_SESSION['csrf_token']) ?>">
                 <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
                 <button class="btn btn-sm btn-outline-danger">Delete</button>
               </form>

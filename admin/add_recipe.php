@@ -1,4 +1,3 @@
-
 <?php
 
 // admin/recipes.php — compact with serial numbers (fixed join)
