@@ -1,2 +1,17 @@
+# macOS
 .DS_Store
+
+# User uploads (binary, large files)
 /uploads/*
+!/uploads/.gitkeep
+
+# Environment secrets — NEVER commit this
+.env
+
+# Laravel sub-app env (admin/my-app)
+admin/my-app/.env
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp

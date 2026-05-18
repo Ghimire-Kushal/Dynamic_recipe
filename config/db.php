@@ -1,40 +1,52 @@
 <?php
 declare(strict_types=1);
 
-/*
-|--------------------------------------------------------------------------
-| Start Session (safe)
-|--------------------------------------------------------------------------
-*/
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
-/*
-|--------------------------------------------------------------------------
-| Error Reporting (development only)
-|--------------------------------------------------------------------------
-*/
 ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
 
 /*
 |--------------------------------------------------------------------------
-| Database Configuration (XAMPP Localhost)
+| Load .env file (never committed to git)
 |--------------------------------------------------------------------------
 */
-$DB_HOST = 'localhost';
-$DB_PORT = '3306';
-$DB_NAME = 'dynamic_recipe';
-$DB_USER = 'root';
-$DB_PASS = ''; 
+$_envFile = dirname(__DIR__) . '/.env';
+if (file_exists($_envFile)) {
+    foreach (file($_envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $_line) {
+        $_line = trim($_line);
+        if ($_line === '' || $_line[0] === '#') continue;
+        $parts = explode('=', $_line, 2);
+        if (count($parts) === 2) {
+            [$_key, $_val] = $parts;
+            $_key = trim($_key);
+            $_val = trim($_val);
+            if (!array_key_exists($_key, $_ENV)) {
+                putenv("$_key=$_val");
+                $_ENV[$_key] = $_val;
+            }
+        }
+    }
+}
+unset($_envFile, $_line, $parts, $_key, $_val);
+
+/*
+|--------------------------------------------------------------------------
+| Database connection — values come from .env, never from this file
+|--------------------------------------------------------------------------
+*/
+$_host = getenv('DB_HOST') ?: 'localhost';
+$_port = getenv('DB_PORT') ?: '3306';
+$_name = getenv('DB_NAME') ?: 'dynamic_recipe';
+$_user = getenv('DB_USER') ?: 'root';
+$_pass = getenv('DB_PASS') ?: '';
 
 try {
     $pdo = new PDO(
-        "mysql:host={$DB_HOST};port={$DB_PORT};dbname={$DB_NAME};charset=utf8mb4",
-        $DB_USER,
-        $DB_PASS,
+        "mysql:host={$_host};port={$_port};dbname={$_name};charset=utf8mb4",
+        $_user,
+        $_pass,
         [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -42,21 +54,20 @@ try {
         ]
     );
 } catch (PDOException $e) {
-    exit('❌ Database connection failed.');
+    exit('Database connection failed. Check your .env file.');
 }
+unset($_host, $_port, $_name, $_user, $_pass);
 
 /*
 |--------------------------------------------------------------------------
-| Base URL (AUTO detect for localhost)
+| Base URL
 |--------------------------------------------------------------------------
 */
 if (!defined('BASE_PATH')) {
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
-    $pathParts = array_values(array_filter(explode('/', $scriptName)));
+    $protocol    = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host        = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $pathParts   = array_values(array_filter(explode('/', $_SERVER['SCRIPT_NAME'] ?? '')));
     $projectFolder = $pathParts[0] ?? basename(dirname(__DIR__));
-
     define('BASE_PATH', $protocol . '://' . $host . '/' . $projectFolder);
 }
 
@@ -65,7 +76,6 @@ if (!defined('BASE_PATH')) {
 | Helper Functions
 |--------------------------------------------------------------------------
 */
-
 function url(string $path = ''): string {
     return rtrim(BASE_PATH, '/') . '/' . ltrim($path, '/');
 }
