@@ -1,17 +1,30 @@
 # macOS
 .DS_Store
+Thumbs.db
 
 # User uploads (binary, large files)
 /uploads/*
 !/uploads/.gitkeep
 
-# Environment secrets — NEVER commit this
+# ─── SECRETS — never commit these ───────────────────────────────────────────
 .env
+*.env
+.env.*
+!.env.example
 
-# Laravel sub-app env (admin/my-app)
+# Laravel sub-app env
 admin/my-app/.env
 
-# IDE / editor
+# ─── Node / npm ──────────────────────────────────────────────────────────────
+# Never commit node_modules — use `npm install` to restore them
+node_modules/
+package-lock.json
+
+# Bundled vendor JS copied from node_modules
+public/motion.js
+
+# ─── IDE / editor ────────────────────────────────────────────────────────────
 .vscode/
 .idea/
 *.swp
+*.swo
