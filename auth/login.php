@@ -1,7 +1,9 @@
 <?php
-// ── ALL logic + redirects BEFORE any output ──────────────────────────────
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require __DIR__ . '/../config/db.php';
+
+// Already logged in
+if (is_logged_in()) { header('Location: ' . url('index.php')); exit; }
 
 $error      = '';
 $identifier = '';
@@ -11,15 +13,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password   = $_POST['password']        ?? '';
 
     if ($identifier === '' || $password === '') {
-        $error = 'Both fields are required.';
+        $error = 'Please fill in all fields.';
     } else {
         $stmt = $pdo->prepare("
-            SELECT id, username, email, password, role, created_at
-            FROM users
-            WHERE email = :email OR username = :username
-            LIMIT 1
+            SELECT id, username, email, password, role
+            FROM   users
+            WHERE  email = :id OR username = :id2
+            LIMIT  1
         ");
-        $stmt->execute([':email' => $identifier, ':username' => $identifier]);
+        $stmt->execute([':id' => $identifier, ':id2' => $identifier]);
         $user = $stmt->fetch();
 
         if (!$user || !password_verify($password, $user['password'])) {
@@ -27,80 +29,107 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             unset($user['password']);
             $_SESSION['user'] = $user;
-            header('Location: ' . url('index.php'));
+            $redirect = $_SESSION['intended_url'] ?? url('index.php');
+            unset($_SESSION['intended_url']);
+            header('Location: ' . $redirect);
             exit;
         }
     }
 }
-// ── HTML output starts here ───────────────────────────────────────────────
+
+$pageTitle = 'Sign In — RecipeApp';
 include __DIR__ . '/../includes/header.php';
 ?>
 
-<div style="min-height:calc(100vh - var(--navbar-h) - 56px);display:flex;align-items:center;justify-content:center;padding:48px 16px;">
-  <div class="auth-card-modern">
+<div class="auth-page-wrap">
 
-    <!-- Logo -->
-    <div class="auth-logo">
-      <div class="brand-icon">🍳</div>
-      <h1>Welcome back</h1>
-      <p>Sign in to your account</p>
+  <div class="auth-card animate-card">
+
+    <!-- Header -->
+    <div class="auth-header">
+      <div class="auth-icon-ring">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+      <h1 class="auth-title">Welcome back</h1>
+      <p class="auth-sub">Sign in to your RecipeApp account</p>
     </div>
+
+    <!-- Success flash (from register or reset) -->
+    <?php if (!empty($_SESSION['flash']['success'])): ?>
+      <div class="auth-alert auth-alert--success">
+        <i class="fa-solid fa-circle-check"></i>
+        <?= e($_SESSION['flash']['success']) ?>
+      </div>
+      <?php unset($_SESSION['flash']['success']); ?>
+    <?php endif; ?>
 
     <!-- Error -->
     <?php if ($error): ?>
-    <div class="flash-alert danger" style="margin-bottom:20px;">
-      <i class="fa-solid fa-circle-xmark"></i>
-      <?= e($error) ?>
-    </div>
+      <div class="auth-alert auth-alert--error">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <?= e($error) ?>
+      </div>
     <?php endif; ?>
 
     <!-- Form -->
-    <form method="post" style="display:flex;flex-direction:column;gap:16px;">
+    <form method="post" class="auth-form" novalidate>
 
-      <div class="form-field">
-        <label class="form-label-custom">Username or Email</label>
-        <input class="form-input-custom" type="text" name="identifier"
-               value="<?= e($identifier) ?>" placeholder="your@email.com"
-               required autocomplete="username">
+      <div class="auth-field">
+        <label for="identifier" class="auth-label">
+          <i class="fa-regular fa-user"></i> Username or Email
+        </label>
+        <input
+          id="identifier" name="identifier" type="text"
+          class="auth-input<?= $error ? ' auth-input--error' : '' ?>"
+          value="<?= e($identifier) ?>"
+          placeholder="your@email.com or username"
+          required autocomplete="username" autofocus>
       </div>
 
-      <div class="form-field" style="margin-bottom:4px;">
-        <label class="form-label-custom">Password</label>
-        <div style="position:relative;">
-          <input class="form-input-custom" type="password" id="pwd" name="password"
-                 placeholder="Your password" required autocomplete="current-password" style="padding-right:44px;">
-          <button type="button" onclick="togglePwd()"
-                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-light);cursor:pointer;font-size:.9rem;">
+      <div class="auth-field">
+        <div class="auth-label-row">
+          <label for="pwd" class="auth-label">
+            <i class="fa-solid fa-key"></i> Password
+          </label>
+          <a href="<?= url('auth/forgot-password.php') ?>" class="auth-link-sm">
+            Forgot password?
+          </a>
+        </div>
+        <div class="auth-input-wrap">
+          <input
+            id="pwd" name="password" type="password"
+            class="auth-input<?= $error ? ' auth-input--error' : '' ?>"
+            placeholder="••••••••"
+            required autocomplete="current-password">
+          <button type="button" class="auth-eye-btn" onclick="togglePwd('pwd','eyeIcon')" aria-label="Show password">
             <i class="fa-regular fa-eye" id="eyeIcon"></i>
           </button>
         </div>
       </div>
 
-      <button type="submit" class="btn-primary-custom" style="width:100%;justify-content:center;padding:13px;">
-        <i class="fa-solid fa-right-to-bracket"></i> Sign In
+      <button type="submit" class="auth-btn">
+        <i class="fa-solid fa-right-to-bracket"></i>
+        Sign In
       </button>
 
     </form>
 
-    <p style="text-align:center;margin-top:20px;font-size:.88rem;color:var(--text-muted);">
+    <p class="auth-footer-text">
       No account yet?
-      <a href="<?= url('auth/register.php') ?>" style="color:var(--clr-600);font-weight:700;">Create one</a>
+      <a href="<?= url('auth/register.php') ?>" class="auth-link">Create one</a>
     </p>
 
   </div>
+
 </div>
 
 <script>
-function togglePwd() {
-  var input = document.getElementById('pwd');
-  var icon  = document.getElementById('eyeIcon');
-  if (input.type === 'password') {
-    input.type = 'text';
-    icon.classList.replace('fa-eye', 'fa-eye-slash');
-  } else {
-    input.type = 'password';
-    icon.classList.replace('fa-eye-slash', 'fa-eye');
-  }
+function togglePwd(inputId, iconId) {
+  var el   = document.getElementById(inputId);
+  var icon = document.getElementById(iconId);
+  var show = el.type === 'password';
+  el.type  = show ? 'text' : 'password';
+  icon.className = show ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
 }
 </script>
 

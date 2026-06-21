@@ -1,7 +1,8 @@
 <?php
-// ── ALL logic + redirects BEFORE any output ──────────────────────────────
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require __DIR__ . '/../config/db.php';
+
+if (is_logged_in()) { header('Location: ' . url('index.php')); exit; }
 
 $errors   = [];
 $username = '';
@@ -13,10 +14,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password']         ?? '';
     $confirm  = $_POST['confirm_password'] ?? '';
 
-    if (strlen($username) < 3)                      $errors[] = 'Username must be at least 3 characters.';
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'A valid email address is required.';
-    if (strlen($password) < 6)                      $errors[] = 'Password must be at least 6 characters.';
-    if ($password !== $confirm)                     $errors[] = 'Passwords do not match.';
+    // Validation
+    if (strlen($username) < 3)
+        $errors[] = 'Username must be at least 3 characters.';
+    elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $username))
+        $errors[] = 'Username may only contain letters, numbers, and underscores.';
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL))
+        $errors[] = 'Enter a valid email address.';
+
+    if (strlen($password) < 6)
+        $errors[] = 'Password must be at least 6 characters.';
+
+    if ($password !== $confirm)
+        $errors[] = 'Passwords do not match.';
 
     if (!$errors) {
         try {
@@ -29,105 +40,162 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'user')")
                     ->execute([$username, $email, $hash]);
 
-                $_SESSION['flash']['success'] = 'Account created! Please log in.';
+                $_SESSION['flash']['success'] = 'Account created! You can now sign in.';
                 header('Location: login.php');
                 exit;
             }
         } catch (PDOException $ex) {
-            $errors[] = 'Registration failed. Please try again.';
+            $errors[] = 'Registration failed — please try again.';
         }
     }
 }
-// ── HTML output starts here ───────────────────────────────────────────────
+
+$pageTitle = 'Create Account — RecipeApp';
 include __DIR__ . '/../includes/header.php';
 ?>
 
-<div style="min-height:calc(100vh - var(--navbar-h) - 56px);display:flex;align-items:center;justify-content:center;padding:48px 16px;">
-  <div class="auth-card-modern">
+<div class="auth-page-wrap">
 
-    <!-- Logo -->
-    <div class="auth-logo">
-      <div class="brand-icon">🍳</div>
-      <h1>Create account</h1>
-      <p>Join the RecipeApp community</p>
+  <div class="auth-card animate-card">
+
+    <!-- Header -->
+    <div class="auth-header">
+      <div class="auth-icon-ring">
+        <i class="fa-solid fa-user-plus"></i>
+      </div>
+      <h1 class="auth-title">Create account</h1>
+      <p class="auth-sub">Join the RecipeApp community</p>
     </div>
 
     <!-- Errors -->
     <?php if ($errors): ?>
-    <div class="flash-alert danger" style="margin-bottom:20px;">
-      <i class="fa-solid fa-circle-xmark"></i>
-      <ul style="margin:0;padding-left:16px;">
-        <?php foreach ($errors as $err): ?>
-          <li><?= e($err) ?></li>
-        <?php endforeach; ?>
-      </ul>
-    </div>
+      <div class="auth-alert auth-alert--error">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <ul>
+          <?php foreach ($errors as $err): ?>
+            <li><?= e($err) ?></li>
+          <?php endforeach; ?>
+        </ul>
+      </div>
     <?php endif; ?>
 
     <!-- Form -->
-    <form method="post" style="display:flex;flex-direction:column;gap:16px;">
+    <form method="post" class="auth-form" novalidate>
 
-      <div class="form-field">
-        <label class="form-label-custom">Username</label>
-        <input class="form-input-custom" type="text" name="username"
-               value="<?= e($username) ?>" placeholder="coolchef123" required autocomplete="username">
+      <div class="auth-field">
+        <label for="username" class="auth-label">
+          <i class="fa-regular fa-user"></i> Username
+        </label>
+        <input
+          id="username" name="username" type="text"
+          class="auth-input"
+          value="<?= e($username) ?>"
+          placeholder="coolchef123"
+          required autocomplete="username" autofocus>
+        <span class="auth-hint">Letters, numbers, underscores — min. 3 chars</span>
       </div>
 
-      <div class="form-field">
-        <label class="form-label-custom">Email</label>
-        <input class="form-input-custom" type="email" name="email"
-               value="<?= e($email) ?>" placeholder="you@example.com" required autocomplete="email">
+      <div class="auth-field">
+        <label for="email" class="auth-label">
+          <i class="fa-regular fa-envelope"></i> Email
+        </label>
+        <input
+          id="email" name="email" type="email"
+          class="auth-input"
+          value="<?= e($email) ?>"
+          placeholder="you@example.com"
+          required autocomplete="email">
       </div>
 
-      <div class="form-field">
-        <label class="form-label-custom">Password</label>
-        <div style="position:relative;">
-          <input class="form-input-custom" type="password" id="pwd" name="password"
-                 placeholder="At least 6 characters" required autocomplete="new-password" style="padding-right:44px;">
-          <button type="button" onclick="togglePwd('pwd','eyePwd')"
-                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-light);cursor:pointer;font-size:.9rem;">
-            <i class="fa-regular fa-eye" id="eyePwd"></i>
+      <div class="auth-field">
+        <label for="pwd" class="auth-label">
+          <i class="fa-solid fa-key"></i> Password
+        </label>
+        <div class="auth-input-wrap">
+          <input
+            id="pwd" name="password" type="password"
+            class="auth-input"
+            placeholder="At least 6 characters"
+            required autocomplete="new-password"
+            oninput="checkStrength(this.value)">
+          <button type="button" class="auth-eye-btn" onclick="togglePwd('pwd','eye1')" aria-label="Show">
+            <i class="fa-regular fa-eye" id="eye1"></i>
+          </button>
+        </div>
+        <!-- Password strength bar -->
+        <div class="pwd-strength-bar">
+          <div class="pwd-strength-fill" id="strengthFill"></div>
+        </div>
+        <span class="pwd-strength-label" id="strengthLabel"></span>
+      </div>
+
+      <div class="auth-field">
+        <label for="pwd2" class="auth-label">
+          <i class="fa-solid fa-shield-halved"></i> Confirm Password
+        </label>
+        <div class="auth-input-wrap">
+          <input
+            id="pwd2" name="confirm_password" type="password"
+            class="auth-input"
+            placeholder="Repeat password"
+            required autocomplete="new-password">
+          <button type="button" class="auth-eye-btn" onclick="togglePwd('pwd2','eye2')" aria-label="Show">
+            <i class="fa-regular fa-eye" id="eye2"></i>
           </button>
         </div>
       </div>
 
-      <div class="form-field" style="margin-bottom:4px;">
-        <label class="form-label-custom">Confirm Password</label>
-        <div style="position:relative;">
-          <input class="form-input-custom" type="password" id="pwd2" name="confirm_password"
-                 placeholder="Repeat password" required autocomplete="new-password" style="padding-right:44px;">
-          <button type="button" onclick="togglePwd('pwd2','eyePwd2')"
-                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-light);cursor:pointer;font-size:.9rem;">
-            <i class="fa-regular fa-eye" id="eyePwd2"></i>
-          </button>
-        </div>
-      </div>
-
-      <button type="submit" class="btn-primary-custom" style="width:100%;justify-content:center;padding:13px;">
-        <i class="fa-solid fa-user-plus"></i> Create Account
+      <button type="submit" class="auth-btn">
+        <i class="fa-solid fa-user-plus"></i>
+        Create Account
       </button>
 
     </form>
 
-    <p style="text-align:center;margin-top:20px;font-size:.88rem;color:var(--text-muted);">
+    <p class="auth-footer-text">
       Already have an account?
-      <a href="<?= url('auth/login.php') ?>" style="color:var(--clr-600);font-weight:700;">Log in</a>
+      <a href="<?= url('auth/login.php') ?>" class="auth-link">Sign in</a>
     </p>
 
   </div>
+
 </div>
 
 <script>
 function togglePwd(inputId, iconId) {
-  var input = document.getElementById(inputId);
-  var icon  = document.getElementById(iconId);
-  if (input.type === 'password') {
-    input.type = 'text';
-    icon.classList.replace('fa-eye', 'fa-eye-slash');
-  } else {
-    input.type = 'password';
-    icon.classList.replace('fa-eye-slash', 'fa-eye');
-  }
+  var el   = document.getElementById(inputId);
+  var icon = document.getElementById(iconId);
+  var show = el.type === 'password';
+  el.type  = show ? 'text' : 'password';
+  icon.className = show ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+}
+
+function checkStrength(val) {
+  var fill  = document.getElementById('strengthFill');
+  var label = document.getElementById('strengthLabel');
+  if (!fill) return;
+
+  var score = 0;
+  if (val.length >= 6)  score++;
+  if (val.length >= 10) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+
+  var levels = [
+    { pct: '0%',   color: 'transparent', text: '' },
+    { pct: '25%',  color: '#ef4444',     text: 'Weak' },
+    { pct: '50%',  color: '#f97316',     text: 'Fair' },
+    { pct: '75%',  color: '#eab308',     text: 'Good' },
+    { pct: '100%', color: 'var(--clr-500)', text: 'Strong' },
+  ];
+  var level = levels[Math.min(score, 4)];
+  if (val.length === 0) level = levels[0];
+
+  fill.style.width       = level.pct;
+  fill.style.background  = level.color;
+  label.textContent      = level.text;
+  label.style.color      = level.color;
 }
 </script>
 

@@ -83,9 +83,11 @@ $currentUser = $_SESSION['user'] ?? null;
     /* Hero */
     .lp-hero {
       min-height: 100vh;
+      min-height: 100svh;
       display: flex;
       align-items: center;
-      padding-top: 80px;
+      padding-top: 100px;
+      padding-bottom: 60px;
       background:
         radial-gradient(ellipse 80% 60% at 60% -10%, hsla(var(--hue), 80%, 70%, .22) 0%, transparent 70%),
         radial-gradient(ellipse 50% 40% at 10% 80%, hsla(calc(var(--hue)+40), 80%, 65%, .15) 0%, transparent 60%),
@@ -518,10 +520,38 @@ $currentUser = $_SESSION['user'] ?? null;
     .footer-links a:hover { color: var(--clr-500); }
     .footer-copy { font-size: .8rem; color: var(--text-light); }
 
-    /* Motion.js handles all entrance animations — keep elements visible by default
-       so users with JS disabled or slow connections still see content */
-    .reveal { opacity: 0; }
-    .lp-hero .reveal { opacity: 1; }
+    /* Scroll-reveal: elements are ALWAYS visible.
+       Animations are cosmetic only — translate/blur, never opacity:0.
+       This means content shows instantly even without JS or in headless tools. */
+    .reveal { opacity: 1; transform: none; }
+
+    /* Cosmetic entrance animations (no opacity change — no blank flash) */
+    @keyframes enterUp {
+      from { transform: translateY(22px); filter: blur(3px); opacity: 0.6; }
+      to   { transform: none; filter: none; opacity: 1; }
+    }
+    @keyframes enterLeft {
+      from { transform: translateX(-20px); filter: blur(2px); opacity: 0.6; }
+      to   { transform: none; filter: none; opacity: 1; }
+    }
+    @keyframes enterScale {
+      from { transform: scale(0.93) translateY(14px); filter: blur(2px); opacity: 0.6; }
+      to   { transform: none; filter: none; opacity: 1; }
+    }
+    .reveal.anim-up    { animation: enterUp    0.55s cubic-bezier(0.16,1,0.3,1) both; }
+    .reveal.anim-left  { animation: enterLeft  0.5s  cubic-bezier(0.16,1,0.3,1) both; }
+    .reveal.anim-scale { animation: enterScale 0.5s  cubic-bezier(0.34,1.56,0.64,1) both; }
+
+    /* Child stagger inside reveal groups */
+    .reveal-group .reveal:nth-child(1) { animation-delay: 0s; }
+    .reveal-group .reveal:nth-child(2) { animation-delay: .09s; }
+    .reveal-group .reveal:nth-child(3) { animation-delay: .18s; }
+    .reveal-group .reveal:nth-child(4) { animation-delay: .27s; }
+    .reveal-group .reveal:nth-child(5) { animation-delay: .36s; }
+    .reveal-group .reveal:nth-child(6) { animation-delay: .45s; }
+    .reveal-group .reveal:nth-child(7) { animation-delay: .54s; }
+    .reveal-group .reveal:nth-child(8) { animation-delay: .63s; }
+    .reveal-group .reveal:nth-child(9) { animation-delay: .72s; }
 
     /* Fix navbar overlap on anchor scroll */
     #features, #howitworks, #demo, #pricing, #faq { scroll-margin-top: 84px; }
@@ -802,7 +832,7 @@ $currentUser = $_SESSION['user'] ?? null;
     </div>
     <div class="row g-4 justify-content-center">
 
-      <div class="col-md-4 reveal">
+      <div class="col-sm-4 reveal" style="animation-delay:0s">
         <div class="hiw-step">
           <div class="hiw-num">1</div>
           <div class="hiw-icon"><i class="fa-solid fa-user-plus"></i></div>
@@ -811,7 +841,7 @@ $currentUser = $_SESSION['user'] ?? null;
         </div>
       </div>
 
-      <div class="col-md-4 reveal" style="transition-delay:.1s">
+      <div class="col-sm-4 reveal" style="animation-delay:.13s">
         <div class="hiw-step">
           <div class="hiw-num">2</div>
           <div class="hiw-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
@@ -820,7 +850,7 @@ $currentUser = $_SESSION['user'] ?? null;
         </div>
       </div>
 
-      <div class="col-md-4 reveal" style="transition-delay:.2s">
+      <div class="col-sm-4 reveal" style="animation-delay:.26s">
         <div class="hiw-step">
           <div class="hiw-num">3</div>
           <div class="hiw-icon"><i class="fa-solid fa-utensils"></i></div>
@@ -841,7 +871,7 @@ $currentUser = $_SESSION['user'] ?? null;
       <h2 class="section-title">Everything you need to cook better</h2>
       <p class="section-sub mx-auto">From discovery to the dinner table, RecipeApp has every tool a modern home cook needs.</p>
     </div>
-    <div class="row g-4">
+    <div class="row g-4 reveal-group">
       <?php
       $features = [
         ['fa-magnifying-glass-plus','Smart Recipe Search','Instantly find recipes by name, ingredient, or cuisine. Filter by category and discover something new every day.'],
@@ -871,7 +901,7 @@ $currentUser = $_SESSION['user'] ?? null;
 <section class="lp-section lp-demo" id="demo">
   <div class="container">
     <div class="row align-items-center g-5">
-      <div class="col-lg-5 reveal">
+      <div class="col-md-5 reveal">
         <div class="section-eyebrow">Product Demo</div>
         <h2 class="section-title">See it in action</h2>
         <p class="section-sub">Click through the tabs to explore the core flows that make RecipeApp the go-to platform for home chefs.</p>
@@ -881,7 +911,7 @@ $currentUser = $_SESSION['user'] ?? null;
           <button class="demo-tab" data-panel="manage">Manage</button>
         </div>
       </div>
-      <div class="col-lg-7 reveal">
+      <div class="col-md-7 reveal">
         <div id="panel-discover" class="demo-panel active">
           <div class="demo-screen">
             <div style="font-size:.78rem;font-weight:700;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase;">Trending Today</div>
@@ -965,10 +995,10 @@ $currentUser = $_SESSION['user'] ?? null;
       <h2 class="section-title">Simple, honest pricing</h2>
       <p class="section-sub mx-auto">Start free and upgrade as you grow. No hidden fees, no credit card required.</p>
     </div>
-    <div class="row g-4 justify-content-center">
+    <div class="row g-4 justify-content-center reveal-group">
 
       <!-- Free -->
-      <div class="col-md-6 col-lg-4 reveal">
+      <div class="col-sm-6 col-lg-4 reveal">
         <div class="pricing-card">
           <div class="pricing-plan-name">Free</div>
           <div class="pricing-price">$0 <span>/ forever</span></div>
@@ -1155,238 +1185,117 @@ $currentUser = $_SESSION['user'] ?? null;
   });
 </script>
 
-<script type="module">
-  import { animate, inView, stagger, scroll, spring } from 'https://cdn.jsdelivr.net/npm/motion@latest/+esm';
-
-  // Shared easings
-  const SPRING   = spring({ stiffness: 280, damping: 28, mass: 0.8 });
-  const SMOOTH   = [0.16, 1, 0.3, 1];   // expo out — feels buttery
-  const SNAPPY   = [0.34, 1.56, 0.64, 1]; // slight overshoot
-
-  // ── 1. Navbar: brand slides in, links fade in sequentially ──
-  animate('.lp-nav .navbar-brand',
-    { opacity: [0, 1], x: [-20, 0] },
-    { duration: 0.6, delay: 0.1, easing: SMOOTH }
-  );
-  animate('.lp-nav-links a',
-    { opacity: [0, 1], y: [-8, 0] },
-    { duration: 0.4, delay: stagger(0.07, { start: 0.2 }), easing: SMOOTH }
-  );
-
-  // ── 2. Hero: layered stagger — badge → title → sub → CTAs → trust badges ──
-  animate('.hero-badge',
-    { opacity: [0, 1], y: [16, 0], scale: [0.9, 1] },
-    { duration: 0.55, delay: 0.15, easing: SNAPPY }
-  );
-  animate('.hero-title',
-    { opacity: [0, 1], y: [32, 0] },
-    { duration: 0.7, delay: 0.3, easing: SMOOTH }
-  );
-  animate('.hero-sub',
-    { opacity: [0, 1], y: [24, 0] },
-    { duration: 0.6, delay: 0.45, easing: SMOOTH }
-  );
-  animate('.hero-cta-group .btn-hero-primary',
-    { opacity: [0, 1], y: [16, 0], scale: [0.95, 1] },
-    { duration: 0.5, delay: 0.58, easing: SNAPPY }
-  );
-  animate('.hero-cta-group .btn-hero-ghost',
-    { opacity: [0, 1], y: [16, 0] },
-    { duration: 0.5, delay: 0.68, easing: SMOOTH }
-  );
-  animate('.hero-stats',
-    { opacity: [0, 1], y: [12, 0] },
-    { duration: 0.5, delay: 0.78, easing: SMOOTH }
-  );
-
-  // ── 3. Hero mockup: float in from right with spring, then idle float loop ──
-  animate('.hero-mockup',
-    { opacity: [0, 1], x: [60, 0], scale: [0.93, 1] },
-    { duration: 0.9, delay: 0.35, easing: SMOOTH }
-  ).then(function() {
-    animate('.hero-mockup',
-      { y: [0, -10, 0] },
-      { duration: 4, repeat: Infinity, easing: 'ease-in-out' }
-    );
+<!-- Scroll-reveal: cosmetic animations only, elements always visible -->
+<script>
+(function() {
+  // Assign animation type per element
+  var typeMap = [
+    ['.faq-item',                         'anim-left'],
+    ['.feature-card,.pricing-card,.hiw-step,.hiw-num,.hiw-icon', 'anim-scale'],
+    ['.reveal',                           'anim-up'],   // default fallback
+  ];
+  typeMap.forEach(function(pair) {
+    document.querySelectorAll(pair[0]).forEach(function(el) {
+      if (!el.dataset.animType) el.dataset.animType = pair[1];
+    });
   });
 
-  // ── 4. Mockup cards cascade in after mockup arrives ──
-  animate('.mockup-card',
-    { opacity: [0, 1], scale: [0.85, 1], y: [12, 0] },
-    { duration: 0.4, delay: stagger(0.06, { start: 0.9 }), easing: SNAPPY }
-  );
+  var io = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (!entry.isIntersecting) return;
+      var el = entry.target;
+      var cls = el.dataset.animType || 'anim-up';
+      // Restart animation cleanly
+      el.classList.remove('anim-up', 'anim-left', 'anim-scale');
+      void el.offsetWidth; // reflow
+      el.classList.add(cls);
+      io.unobserve(el);
+    });
+  }, { threshold: 0.1 });
 
-  // ── 5. How it works: step numbers pop in with spring, then content ──
-  inView('.lp-howitworks .row', function(info) {
-    var steps = info.target.querySelectorAll('.hiw-step');
-    animate(steps,
-      { opacity: [0, 1], y: [40, 0] },
-      { duration: 0.6, delay: stagger(0.18), easing: SMOOTH }
-    );
-    animate(info.target.querySelectorAll('.hiw-num'),
-      { scale: [0.5, 1.15, 1] },
-      { duration: 0.55, delay: stagger(0.18, { start: 0.1 }), easing: SNAPPY }
-    );
-    animate(info.target.querySelectorAll('.hiw-icon'),
-      { rotate: [-15, 0], opacity: [0, 1] },
-      { duration: 0.5, delay: stagger(0.18, { start: 0.25 }), easing: SMOOTH }
-    );
-  }, { amount: 0.15 });
+  document.querySelectorAll('.reveal, .feature-card, .pricing-card, .hiw-step, .faq-item')
+    .forEach(function(el) { io.observe(el); });
+})();
+</script>
 
-  // ── 6. Feature cards: 3-column stagger, scale + fade ──
-  inView('.lp-features .row', function(info) {
-    animate(info.target.querySelectorAll('.feature-card'),
-      { opacity: [0, 1], y: [36, 0], scale: [0.94, 1] },
-      { duration: 0.55, delay: stagger(0.07), easing: SMOOTH }
-    );
-    animate(info.target.querySelectorAll('.feature-icon'),
-      { scale: [0.6, 1.1, 1], rotate: [-10, 0] },
-      { duration: 0.5, delay: stagger(0.07, { start: 0.15 }), easing: SNAPPY }
-    );
-  }, { amount: 0.08 });
+<!-- Motion: hero entrance + interactive effects only -->
+<script src="<?= url('public/motion.js') ?>"></script>
+<script>
+(function() {
+  var animate = Motion.animate, stagger = Motion.stagger;
+  var SMOOTH = [0.16, 1, 0.3, 1];
+  var SNAPPY = [0.34, 1.56, 0.64, 1];
 
-  // ── 7. Demo section: left text then panel slides in ──
-  inView('.lp-demo .row', function(info) {
-    animate(info.target.querySelector('.col-lg-5'),
-      { opacity: [0, 1], x: [-40, 0] },
-      { duration: 0.65, easing: SMOOTH }
-    );
-    animate(info.target.querySelector('.col-lg-7'),
-      { opacity: [0, 1], x: [40, 0] },
-      { duration: 0.65, delay: 0.1, easing: SMOOTH }
-    );
-  }, { amount: 0.12 });
+  // ── Hero layered entrance (no opacity FROM so elements stay visible in print/PDF) ──
+  animate('.hero-badge',   { y:[14,0], scale:[0.92,1] }, { duration:0.5,  delay:0.1,  easing:SNAPPY });
+  animate('.hero-title',   { y:[28,0] },                  { duration:0.65, delay:0.22, easing:SMOOTH });
+  animate('.hero-sub',     { y:[20,0] },                  { duration:0.55, delay:0.38, easing:SMOOTH });
+  animate('.hero-cta-group .btn-hero-primary', { y:[14,0], scale:[0.96,1] }, { duration:0.45, delay:0.5, easing:SNAPPY });
+  animate('.hero-cta-group .btn-hero-ghost',   { y:[14,0] },                 { duration:0.45, delay:0.6, easing:SMOOTH });
+  animate('.hero-stats',   { y:[10,0] },                  { duration:0.45, delay:0.7,  easing:SMOOTH });
 
-  // ── 8. Demo tab switch: animate rows in the newly active panel ──
+  // ── Hero mockup: slide in then idle float ──
+  animate('.hero-mockup', { x:[56,0], scale:[0.94,1] }, { duration:0.85, delay:0.3, easing:SMOOTH })
+    .then(function() {
+      animate('.hero-mockup', { y:[0,-10,0] }, { duration:3.8, repeat:Infinity, easing:'ease-in-out' });
+    });
+  animate('.mockup-card', { scale:[0.88,1], y:[10,0] }, { duration:0.38, delay:stagger(0.055,{start:0.85}), easing:SNAPPY });
+
+  // ── Demo tab switch ──
   document.getElementById('demoTabs').addEventListener('click', function(e) {
     var btn = e.target.closest('.demo-tab');
     if (!btn) return;
-    var panelId = 'panel-' + btn.dataset.panel;
-    var panel   = document.getElementById(panelId);
-    var rows    = panel.querySelectorAll('.demo-row');
-    animate(panel, { opacity: [0, 1], y: [12, 0] }, { duration: 0.3, easing: SMOOTH });
-    animate(rows,  { opacity: [0, 1], x: [-16, 0] }, { duration: 0.3, delay: stagger(0.06), easing: SMOOTH });
+    var panel = document.getElementById('panel-' + btn.dataset.panel);
+    animate(panel, { opacity:[0,1], y:[10,0] }, { duration:0.28, easing:SMOOTH });
+    animate(panel.querySelectorAll('.demo-row'), { opacity:[0,1], x:[-14,0] }, { duration:0.28, delay:stagger(0.055), easing:SMOOTH });
   });
 
-  // ── 9. Pricing cards: fan-in from bottom with slight rotation ──
-  inView('.lp-pricing .row', function(info) {
-    var cards = info.target.querySelectorAll('.pricing-card');
-    animate(cards,
-      { opacity: [0, 1], y: [48, 0], scale: [0.93, 1] },
-      { duration: 0.6, delay: stagger(0.12), easing: SMOOTH }
-    );
-    animate(info.target.querySelectorAll('.pricing-price'),
-      { opacity: [0, 1], scale: [0.8, 1.05, 1] },
-      { duration: 0.5, delay: stagger(0.12, { start: 0.25 }), easing: SNAPPY }
-    );
-  }, { amount: 0.1 });
-
-  // ── 10. FAQ: slide in from left, cascade ──
-  inView('.lp-faq .col-lg-7', function(info) {
-    animate(info.target.querySelectorAll('.faq-item'),
-      { opacity: [0, 1], x: [-28, 0] },
-      { duration: 0.5, delay: stagger(0.08), easing: SMOOTH }
-    );
-  }, { amount: 0.1 });
-
-  // ── 11. CTA: zoom-fade in ──
-  inView('.lp-cta', function(info) {
-    animate(info.target.querySelector('.cta-title'),
-      { opacity: [0, 1], y: [30, 0], scale: [0.95, 1] },
-      { duration: 0.65, easing: SMOOTH }
-    );
-    animate(info.target.querySelector('.cta-sub'),
-      { opacity: [0, 1], y: [20, 0] },
-      { duration: 0.55, delay: 0.15, easing: SMOOTH }
-    );
-    animate(info.target.querySelector('.hero-cta-group'),
-      { opacity: [0, 1], y: [16, 0] },
-      { duration: 0.5, delay: 0.28, easing: SMOOTH }
-    );
-  }, { amount: 0.2 });
-
-  // ── 12. Scroll-linked parallax on hero background blobs ──
-  scroll(
-    animate('.lp-hero::before', { y: [0, 80] }, { easing: 'linear' }),
-    { target: document.querySelector('.lp-hero') }
-  );
-
-  // ── 13. Navbar shrinks on scroll ──
+  // ── Navbar compact on scroll ──
   var nav = document.querySelector('.lp-nav');
   window.addEventListener('scroll', function() {
-    if (window.scrollY > 60) {
-      nav.style.padding = '.5rem 0';
-      nav.style.boxShadow = '0 2px 24px rgba(0,0,0,.08)';
-    } else {
-      nav.style.padding = '.9rem 0';
-      nav.style.boxShadow = 'none';
-    }
-  }, { passive: true });
+    var s = window.scrollY > 60;
+    nav.style.padding   = s ? '.45rem 0' : '.9rem 0';
+    nav.style.boxShadow = s ? '0 2px 20px rgba(0,0,0,.08)' : 'none';
+  }, { passive:true });
 
-  // ── 14. Hover effects (pointer devices only) ──
+  // ── Hover effects (pointer only) ──
   if (window.matchMedia('(hover: hover)').matches) {
-
-    // Feature cards — lift + icon spin
     document.querySelectorAll('.feature-card').forEach(function(card) {
       var icon = card.querySelector('.feature-icon i');
       card.addEventListener('mouseenter', function() {
-        animate(card, { y: -8, scale: 1.025, boxShadow: '0 16px 48px rgba(0,0,0,.13)' }, { duration: 0.3, easing: SMOOTH });
-        if (icon) animate(icon, { rotate: [0, -12, 8, 0], scale: [1, 1.2, 1] }, { duration: 0.5, easing: SMOOTH });
+        animate(card, { y:-7, scale:1.022 }, { duration:0.28, easing:SMOOTH });
+        if (icon) animate(icon, { rotate:[0,-10,7,0], scale:[1,1.18,1] }, { duration:0.45, easing:SMOOTH });
       });
-      card.addEventListener('mouseleave', function() {
-        animate(card, { y: 0, scale: 1, boxShadow: '' }, { duration: 0.35, easing: SMOOTH });
-      });
+      card.addEventListener('mouseleave', function() { animate(card, { y:0, scale:1 }, { duration:0.32, easing:SMOOTH }); });
     });
 
-    // Pricing cards — lift
     document.querySelectorAll('.pricing-card').forEach(function(card) {
-      card.addEventListener('mouseenter', function() {
-        animate(card, { y: -7, scale: 1.015 }, { duration: 0.28, easing: SMOOTH });
-      });
-      card.addEventListener('mouseleave', function() {
-        animate(card, { y: 0, scale: 1 }, { duration: 0.32, easing: SMOOTH });
-      });
+      card.addEventListener('mouseenter', function() { animate(card, { y:-6, scale:1.012 }, { duration:0.25, easing:SMOOTH }); });
+      card.addEventListener('mouseleave', function() { animate(card, { y:0, scale:1 },     { duration:0.3,  easing:SMOOTH }); });
     });
 
-    // CTA buttons — subtle press feedback
     document.querySelectorAll('.btn-hero-primary, .btn-cta-white, .btn-plan-fill').forEach(function(btn) {
-      btn.addEventListener('mousedown', function() {
-        animate(btn, { scale: 0.96 }, { duration: 0.1, easing: SMOOTH });
-      });
-      btn.addEventListener('mouseup',   function() {
-        animate(btn, { scale: 1 }, { duration: 0.2, easing: SNAPPY });
-      });
-      btn.addEventListener('mouseleave', function() {
-        animate(btn, { scale: 1 }, { duration: 0.2, easing: SMOOTH });
-      });
+      btn.addEventListener('mousedown',  function() { animate(btn, { scale:0.96 }, { duration:0.1 }); });
+      btn.addEventListener('mouseup',    function() { animate(btn, { scale:1 }, { duration:0.2, easing:SNAPPY }); });
+      btn.addEventListener('mouseleave', function() { animate(btn, { scale:1 }, { duration:0.2, easing:SMOOTH }); });
     });
 
-    // How it works icons — wiggle on hover
     document.querySelectorAll('.hiw-icon').forEach(function(icon) {
       icon.addEventListener('mouseenter', function() {
-        animate(icon, { rotate: [0, -8, 8, -4, 0], scale: [1, 1.12, 1] }, { duration: 0.5, easing: SMOOTH });
+        animate(icon, { rotate:[0,-8,8,-3,0], scale:[1,1.1,1] }, { duration:0.45, easing:SMOOTH });
       });
     });
 
-    // Nav links — underline slide
     document.querySelectorAll('.lp-nav-links a').forEach(function(a) {
-      a.addEventListener('mouseenter', function() {
-        animate(a, { scale: 1.05 }, { duration: 0.18, easing: SNAPPY });
-      });
-      a.addEventListener('mouseleave', function() {
-        animate(a, { scale: 1 }, { duration: 0.22, easing: SMOOTH });
-      });
+      a.addEventListener('mouseenter', function() { animate(a, { scale:1.05 }, { duration:0.16, easing:SNAPPY }); });
+      a.addEventListener('mouseleave', function() { animate(a, { scale:1 },   { duration:0.2,  easing:SMOOTH }); });
     });
 
-    // Back-to-top pulse on hover
     var bttEl = document.getElementById('backToTop');
-    bttEl.addEventListener('mouseenter', function() {
-      animate(bttEl, { scale: 1.12, y: -3 }, { duration: 0.22, easing: SNAPPY });
-    });
-    bttEl.addEventListener('mouseleave', function() {
-      animate(bttEl, { scale: 1, y: 0 }, { duration: 0.28, easing: SMOOTH });
-    });
+    bttEl.addEventListener('mouseenter', function() { animate(bttEl, { scale:1.1, y:-2 }, { duration:0.2,  easing:SNAPPY }); });
+    bttEl.addEventListener('mouseleave', function() { animate(bttEl, { scale:1,   y:0  }, { duration:0.25, easing:SMOOTH }); });
   }
+})();
 </script>
 </body>
 </html>
